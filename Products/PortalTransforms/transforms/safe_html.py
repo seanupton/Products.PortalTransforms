@@ -2545,6 +2545,11 @@ class SafeHTML:
         if self.config.get('disable_transform'):
             data.setData(orig)
         else:
+            safe_html = self.scrub_html(orig)
+            data.setData(safe_html)
+        return data
+
+    def scrub_html(self, orig):
             # append html tag to create a dummy parent for the tree
             html_parser = html.HTMLParser(encoding='utf-8')
             if '<html' in orig.lower():
@@ -2574,10 +2579,8 @@ class SafeHTML:
                               scripts=bool('script' in self.config['nasty_tags']),
                               style=False)
             cleaner(tree)
-            safe_html2 = strip_outer(etree.tostring(tree, encoding='utf-8').strip()) # remove all except body or outer div
-            data.setData(safe_html2)
-
-        return data
+            # remove all except body or outer div
+            return strip_outer(etree.tostring(tree, encoding='utf-8').strip())
 
 
 def register():

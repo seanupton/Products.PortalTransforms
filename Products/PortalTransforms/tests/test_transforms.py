@@ -5,6 +5,7 @@ from Products.CMFCore.utils import getToolByName
 from Products.PortalTransforms.data import datastream
 from Products.PortalTransforms.interfaces import IDataStream
 from Products.PortalTransforms.libtransforms.utils import MissingBinary
+from Products.PortalTransforms.libtransforms.utils import scrubHTMLNoRaise
 from Products.PortalTransforms.transforms.image_to_bmp import image_to_bmp
 from Products.PortalTransforms.transforms.image_to_gif import image_to_gif
 from Products.PortalTransforms.transforms.image_to_jpeg import image_to_jpeg
@@ -18,6 +19,7 @@ from Products.PortalTransforms.transforms.safe_html import SafeHTML
 from Products.PortalTransforms.transforms.safe_html import VALID_TAGS
 from Products.PortalTransforms.transforms.textile_to_html import HAS_TEXTILE
 from Products.PortalTransforms.transforms.word_to_html import word_to_html
+
 from utils import input_file_path
 from utils import load
 from utils import matching_inputs
@@ -304,36 +306,21 @@ class WordTransformsTest(ATSiteTestCase):
 class ParsersTestCase(unittest.TestCase):
 
     def test_javascript_on_attr(self):
-        from Products.PortalTransforms.libtransforms.utils import (
-            scrubHTMLNoRaise, scrubHTML)
-        from Products.PortalTransforms.libtransforms.utils import IllegalHTML
-
         htmlFile = open(input_file_path('test_js_on.html'), 'rb')
         data = htmlFile.read()
-        self.assertRaises(IllegalHTML, scrubHTML, data)
         result = scrubHTMLNoRaise(data)
         self.assertTrue('link' in result)
 
     def test_javascript_uri(self):
-        from Products.PortalTransforms.libtransforms.utils import (
-            scrubHTMLNoRaise, scrubHTML)
-        from Products.PortalTransforms.libtransforms.utils import IllegalHTML
-
         htmlFile = open(input_file_path('test_js_uri.html'), 'rb')
         data = htmlFile.read()
-        self.assertRaises(IllegalHTML, scrubHTML, data)
         result = scrubHTMLNoRaise(data)
         self.assertTrue('link' in result)
 
     def test_invalid_tags(self):
-        from Products.PortalTransforms.libtransforms.utils import (
-            scrubHTMLNoRaise, scrubHTML)
-        from Products.PortalTransforms.libtransforms.utils import IllegalHTML
-
         htmlFile = open(input_file_path('test_invalid_tags.html'), 'rb')
         data = htmlFile.read()
-        self.assertRaises(IllegalHTML, scrubHTML, data)
-        self.assertRaises(IllegalHTML, scrubHTMLNoRaise, data)
+        self.assertEqual(scrubHTMLNoRaise(data).strip(), '')
 
 
 TRANSFORMS_TESTINFO = (
