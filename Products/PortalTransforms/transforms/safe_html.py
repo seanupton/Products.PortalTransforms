@@ -2550,37 +2550,41 @@ class SafeHTML:
         return data
 
     def scrub_html(self, orig):
-            # append html tag to create a dummy parent for the tree
-            html_parser = html.HTMLParser(encoding='utf-8')
-            if '<html' in orig.lower():
-                # full html
-                tree = html.fromstring(orig, parser=html_parser)
-                strip_outer = bodyfinder
-            else:
-                # partial html (i.e. coming from WYSIWYG editor)
-                tree = html.fragment_fromstring(orig, create_parent=True, parser=html_parser)
+        # append html tag to create a dummy parent for the tree
+        html_parser = html.HTMLParser(encoding='utf-8')
+        if '<html' in orig.lower():
+            # full html
+            tree = html.fromstring(orig, parser=html_parser)
+            strip_outer = bodyfinder
+        else:
+            # partial html (i.e. coming from WYSIWYG editor)
+            tree = html.fragment_fromstring(orig, create_parent=True, parser=html_parser)
 
-                def strip_outer(s):
-                    return s[5:-6]
+            def strip_outer(s):
+                return s[5:-6]
 
-            for elem in tree.iter(etree.Element):
-                if elem is not None:
-                    for attrib, value in elem.attrib.items():
-                        if hasScript(value):
-                            del elem.attrib[attrib]
+        for elem in tree.iter(etree.Element):
+            if elem is not None:
+                for attrib, value in elem.attrib.items():
+                    if hasScript(value):
+                        del elem.attrib[attrib]
 
-            cleaner = Cleaner(kill_tags=self.config['nasty_tags'],
-                              page_structure=False,
-                              safe_attrs_only=False,
-                              embedded=False,
-                              remove_unknown_tags=True,
-                              meta=False,
-                              javascript=bool('script' in self.config['nasty_tags']),
-                              scripts=bool('script' in self.config['nasty_tags']),
-                              style=False)
+        cleaner = Cleaner(kill_tags=self.config['nasty_tags'],
+                          page_structure=False,
+                          safe_attrs_only=False,
+                          embedded=False,
+                          remove_unknown_tags=True,
+                          meta=False,
+                          javascript=bool('script' in self.config['nasty_tags']),
+                          scripts=bool('script' in self.config['nasty_tags']),
+                          style=False)
+        try:
             cleaner(tree)
-            # remove all except body or outer div
-            return strip_outer(etree.tostring(tree, encoding='utf-8').strip())
+        except AssertionError:
+            # some VERY invalid HTML
+            return ''
+        # remove all except body or outer div
+        return strip_outer(etree.tostring(tree, encoding='utf-8').strip())
 
 
 def register():
